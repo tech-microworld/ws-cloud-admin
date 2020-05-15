@@ -60,7 +60,7 @@
           <span>{{ scope.row.service_name }}</span>
         </template>
       </el-table-column>
-      <el-table-column class-name="status-col" label="状态" width="110" align="center">
+      <el-table-column class-name="status-col" label="是否启用" width="110" align="center">
         <template slot-scope="scope">
           <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status | statusLabelFilter }}</el-tag>
         </template>
@@ -82,75 +82,71 @@
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form
         ref="dataForm"
-        :model="temp"
-        label-position="left"
+        :model="dataFormModel"
+        label-position="right"
         label-width="70px"
         size="mini"
         style="width: 400px margin-left:50px"
       >
-        <el-form-item label="路由前缀" prop="title">
-          <el-input v-model="temp.prefix" />
+        <el-form-item label="路由前缀">
+          <el-input v-model="dataFormModel.prefix" placeholder="eg: /openapi/user" />
         </el-form-item>
-        <el-form-item label="服务名" prop="title">
-          <el-input v-model="temp.service_name" />
+        <el-form-item label="服务名">
+          <el-input v-model="dataFormModel.service_name" placeholder="eg: user" />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-switch v-model="temp.status" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+        <el-form-item label="是否启用">
+          <el-switch v-model="dataFormModel.status" active-value="1" inactive-value="0" />
         </el-form-item>
         <el-form-item label="plugins">
-          <el-select v-model="temp.plugins" multiple placeholder="请选择">
+          <el-select v-model="dataFormModel.plugins" multiple placeholder="请选择">
             <el-option
-              v-for="item in opt.plugins"
+              v-for="item in plugins"
               :key="item.value"
               :label="item.label"
               :value="item.value"
-            ></el-option>
+            />
           </el-select>
+        </el-form-item>
+        <el-form-item label="参数">
+          <div class="editor-container">
+            <json-editor ref="jsonEditor" v-model="dataFormModel.propsData" />
+          </div>
         </el-form-item>
         <el-form-item label="说明">
           <el-input
-            v-model="temp.remark"
+            v-model="dataFormModel.remark"
             :autosize="{ minRows: 2, maxRows: 4}"
             type="textarea"
-            placeholder="Please input"
+            placeholder="备注、描述"
           />
-        </el-form-item>
-        <el-form-item label="参数">
-          <el-col :span="10">
-            <el-input v-model="temp.prefix" />
-          </el-col>
-          <el-col class="line" :span="2">-</el-col>
-          <el-col :span="10">
-            <el-input v-model="temp.prefix" />
-          </el-col>
-          <el-col class="line" :span="2">
-            <el-button icon="el-icon-plus" circle></el-button>
-          </el-col>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">提交</el-button>
+        <el-button type="primary" @click="submitDataForm()">提交</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import dict from "@/utils/dict"
-import { getList } from "@/api/gateway/routes"
+import JsonEditor from '@/components/JsonEditor'
+import dict from '@/utils/dict'
+import * as routeApi from '@/api/gateway/routes'
+import * as pluginApi from '@/api/gateway/plugins'
 
 export default {
+  components: { JsonEditor },
   filters: {
     statusFilter(status) {
       const statusMap = {
-        1: "success",
-        0: "danger"
+        1: 'success',
+        0: 'danger'
       }
       return statusMap[status]
     },
     statusLabelFilter(status) {
-      return dict.getLabel("status", status)
+      return dict.getLabel('status', status)
     }
   },
   data() {
@@ -161,47 +157,61 @@ export default {
         uri: undefined,
         service: undefined
       },
-      temp: {
-        id: undefined,
-        remark: "",
-        prefix: "",
-        service_name: "",
+      dataFormModel: {
+        remark: '',
+        prefix: '',
+        service_name: '',
         status: 1,
         plugins: [],
-        propsData: ""
+        propsData: {
+          aa: 123
+        }
       },
       dialogFormVisible: false,
-      dialogStatus: "",
+      dialogStatus: '',
       textMap: {
         update: '修改路由',
         create: '添加路由'
       },
       dialogPvVisible: false,
-      opt: {
-        plugins: [
-          {
-            value: "discovery",
-            label: "服务发现"
-          },
-          {
-            value: "rewwrite",
-            label: "url重写插件"
-          },
-          {
-            value: "tracing",
-            label: "链路跟踪插件"
-          }
-        ]
-      }
+      plugins: [
+        {
+          value: 'discovery',
+          label: '服务发现'
+        },
+        {
+          value: 'rewwrite',
+          label: 'url重写插件'
+        },
+        {
+          value: 'tracing',
+          label: '链路跟踪插件'
+        }
+      ]
     }
   },
   created() {
     this.getList()
+    this.getPlugins()
   },
   methods: {
+    getPlugins() {
+      pluginApi.getList().then(response => {
+        var plugins = []
+        if (response.data && response.data.length > 0) {
+          response.data.forEach(data => {
+            plugins.push({
+              value: data.name,
+              label: data.desc
+            })
+          })
+        }
+        this.plugins = plugins
+      })
+    },
     getList() {
       this.listLoading = true
-      getList().then(response => {
+      routeApi.getList().then(response => {
         this.list = response.data
         this.listLoading = false
       })
@@ -210,24 +220,36 @@ export default {
       this.listQuery = {}
       this.getList()
     },
-    resetTemp() {
-      this.temp = {
-        id: undefined,
-        importance: 1,
-        remark: "",
-        timestamp: new Date(),
-        title: "",
-        status: "published",
-        type: ""
+    resetFormModel() {
+      this.dataFormModel = {
+        remark: 'default',
+        prefix: '/openapi/user',
+        service_name: '',
+        status: 1,
+        plugins: [],
+        propsData: {
+          aa: 123
+        }
       }
     },
     handleCreate() {
-      this.resetTemp()
-      this.dialogStatus = "create"
+      this.resetFormModel()
+      this.dialogStatus = 'create'
       this.dialogFormVisible = true
       this.$nextTick(() => {
-        this.$refs["dataForm"].clearValidate()
+        this.$refs['dataForm'].clearValidate()
       })
+    },
+    handleUpdate(row) {
+      this.dataFormModel = Object.assign({}, row) // copy obj
+      this.dialogStatus = 'update'
+      this.dialogFormVisible = true
+      this.$nextTick(() => {
+        this.$refs['dataForm'].clearValidate()
+      })
+    },
+    submitDataForm() {
+      console.log(this.dataFormModel)
     }
   }
 }
@@ -236,5 +258,10 @@ export default {
 <style scoped>
 .line {
   text-align: center;
+}
+
+.editor-container{
+  position: relative;
+  height: 50%;
 }
 </style>
