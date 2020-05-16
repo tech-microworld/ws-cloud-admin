@@ -40,6 +40,11 @@
           <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status | statusLabelFilter }}</el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="更新时间" align="left">
+        <template slot-scope="scope">
+          <span>{{ scope.row.time | parseTime }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">修改</el-button>
