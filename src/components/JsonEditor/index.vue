@@ -27,7 +27,11 @@ export default {
     value(value) {
       const editorValue = this.jsonEditor.getValue()
       if (value !== editorValue) {
-        this.jsonEditor.setValue(JSON.stringify(this.value, null, 2))
+        let jsonStr = this.value
+        if (typeof this.value !== 'string') {
+          jsonStr = JSON.stringify(this.value, null, 2)
+        }
+        this.jsonEditor.setValue(jsonStr)
       }
     }
   },
@@ -40,7 +44,12 @@ export default {
       lint: true
     })
 
-    this.jsonEditor.setValue(JSON.stringify(this.value, null, 2))
+    let jsonStr = this.value
+    if (typeof this.value !== 'string') {
+      jsonStr = JSON.stringify(this.value, null, 2)
+    }
+
+    this.jsonEditor.setValue(jsonStr)
     this.jsonEditor.on('change', cm => {
       this.$emit('changed', cm.getValue())
       this.$emit('input', cm.getValue())
@@ -55,7 +64,7 @@ export default {
 </script>
 
 <style scoped>
-.json-editor{
+.json-editor {
   height: 100%;
   position: relative;
 }
@@ -63,10 +72,10 @@ export default {
   height: auto;
   min-height: 300px;
 }
-.json-editor >>> .CodeMirror-scroll{
+.json-editor >>> .CodeMirror-scroll {
   min-height: 300px;
 }
 .json-editor >>> .cm-s-rubyblue span.cm-string {
-  color: #F08047;
+  color: #f08047;
 }
 </style>

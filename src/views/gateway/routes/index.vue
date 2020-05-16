@@ -73,10 +73,10 @@
         <el-form-item label="服务名" prop="service_name">
           <el-input v-model="dataFormModel.service_name" placeholder="eg: user" />
         </el-form-item>
-        <el-form-item label="是否启用">
-          <el-switch v-model="dataFormModel.enable" />
+        <el-form-item label="是否启用" prop="enable">
+          <el-switch v-model="dataFormModel.status" :active-value="1" :inactive-value="0" />
         </el-form-item>
-        <el-form-item label="plugins">
+        <el-form-item label="plugins" prop="plugins">
           <el-select v-model="dataFormModel.plugins" multiple placeholder="请选择">
             <el-option
               v-for="item in plugins"
@@ -124,8 +124,7 @@ const defaultFormData = {
   status: 1,
   plugins: [],
   props: {},
-  propsData: {},
-  enable: true
+  propsData: '{}'
 }
 
 export default {
@@ -144,10 +143,12 @@ export default {
   },
   data() {
     const validatePropsData = (rule, value, callback) => {
-      if (value) {
-        if (isJsonObj(value)) {
+      const propsData = this.dataFormModel.propsData
+      if (propsData) {
+        if (isJsonObj(propsData)) {
           callback()
         } else {
+          console.log('not json string: ', propsData)
           callback(new Error('请检查参数格式，必须是 json object'))
         }
       } else {
@@ -159,7 +160,6 @@ export default {
       list: null,
       listLoading: true,
       dataFormModel: Object.assign({}, defaultFormData),
-      propsData: {},
       enable: true,
       dialogFormVisible: false,
       dialogStatus: '',
@@ -219,8 +219,7 @@ export default {
     },
     handleUpdate(row) {
       this.dataFormModel = Object.assign({}, row)
-      this.dataFormModel.enable = row.status === 1
-      this.dataFormModel.propsData = row.props
+      this.dataFormModel.propsData = JSON.stringify(row.props, null, 2)
       this.dataFormModel.old_prefix = row.prefix
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
@@ -238,7 +237,7 @@ export default {
               remark: this.dataFormModel.remark,
               prefix: this.dataFormModel.prefix,
               service_name: this.dataFormModel.service_name,
-              status: this.dataFormModel.enable ? 1 : 0,
+              status: this.dataFormModel.status,
               plugins: this.dataFormModel.plugins,
               props: JSON.parse(this.dataFormModel.propsData)
             }
