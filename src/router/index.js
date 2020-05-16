@@ -91,15 +91,15 @@ export const asyncRoutes = [
     children: [
       {
         path: 'routes',
-        name: '路由配置',
+        name: 'routes',
         component: () => import('@/views/gateway/routes/index'),
         meta: { title: '路由配置', icon: 'table' }
       },
       {
         path: 'services',
-        name: '服务节点',
+        name: 'services',
         component: () => import('@/views/gateway/services/index'),
-        meta: { title: '服务节点监控', icon: 'tree' }
+        meta: { title: '服务节点', icon: 'tree' }
       }
     ]
   },

@@ -47,7 +47,7 @@ service.interceptors.response.use(
   },
   error => {
     const status = error.response.status
-    const errorMsg = error.response.data || error.message
+    let errorMsg = error.response.data || error.message
     console.log('err - ' + error) // for debug
     if (status === 401) {
       // to re-login
@@ -60,6 +60,9 @@ service.interceptors.response.use(
           location.reload()
         })
       })
+    }
+    if (status === 404) {
+      errorMsg = '404 Not Found'
     }
     Message({
       message: errorMsg,

@@ -1,32 +1,12 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input
-        v-model="listQuery.title"
-        placeholder="URI"
-        style="width: 200px"
-        class="filter-item"
-        @keyup.enter.native="handleFilter"
-      />
-      <el-input
-        v-model="listQuery.service_name"
-        placeholder="服务名"
-        style="width: 200px"
-        class="filter-item"
-        @keyup.enter.native="handleFilter"
-      />
-      <el-button
-        v-waves
-        class="filter-item"
-        type="primary"
-        icon="el-icon-search"
-        @click="handleFilter"
-      >查询</el-button>
       <el-button
         class="filter-item"
         style="margin-left: 10px"
         type="primary"
-        icon="el-icon-edit"
+        icon="el-icon-plus"
+        size="small"
         @click="handleCreate"
       >添加</el-button>
     </div>
@@ -50,14 +30,9 @@
           <span>{{ scope.row.service_name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="插件" width="110" align="center">
+      <el-table-column label="说明" align="left">
         <template slot-scope="scope">
-          <span>{{ scope.row.service_name }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="参数" width="110" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.service_name }}</span>
+          <span>{{ scope.row.remark }}</span>
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="是否启用" width="110" align="center">
@@ -66,14 +41,14 @@
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
-        <template slot-scope="{row,$index}">
+        <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">修改</el-button>
           <el-button
             v-if="row.status!='deleted'"
             size="mini"
             type="danger"
-            @click="handleDelete(row,$index)"
-          >禁用</el-button>
+            @click="handleDelete(row)"
+          >删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -82,20 +57,24 @@
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form
         ref="dataForm"
+        :rules="dataFormRules"
         :model="dataFormModel"
         label-position="right"
-        label-width="70px"
+        label-width="85px"
         size="mini"
         style="width: 400px margin-left:50px"
       >
-        <el-form-item label="路由前缀">
+        <el-form-item label="协议" prop="protocol">
+          <el-input v-model="dataFormModel.protocol" placeholder="eg: http" readonly />
+        </el-form-item>
+        <el-form-item label="路由前缀" prop="prefix">
           <el-input v-model="dataFormModel.prefix" placeholder="eg: /openapi/user" />
         </el-form-item>
-        <el-form-item label="服务名">
+        <el-form-item label="服务名" prop="service_name">
           <el-input v-model="dataFormModel.service_name" placeholder="eg: user" />
         </el-form-item>
         <el-form-item label="是否启用">
-          <el-switch v-model="dataFormModel.status" active-value="1" inactive-value="0" />
+          <el-switch v-model="dataFormModel.enable" />
         </el-form-item>
         <el-form-item label="plugins">
           <el-select v-model="dataFormModel.plugins" multiple placeholder="请选择">
@@ -107,17 +86,17 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="参数">
+        <el-form-item label="参数" prop="propsData">
           <div class="editor-container">
             <json-editor ref="jsonEditor" v-model="dataFormModel.propsData" />
           </div>
         </el-form-item>
-        <el-form-item label="说明">
+        <el-form-item label="说明" prop="remark">
           <el-input
             v-model="dataFormModel.remark"
             :autosize="{ minRows: 2, maxRows: 4}"
             type="textarea"
-            placeholder="备注、描述"
+            placeholder="备注、说明"
           />
         </el-form-item>
       </el-form>
@@ -132,8 +111,22 @@
 <script>
 import JsonEditor from '@/components/JsonEditor'
 import dict from '@/utils/dict'
+import { isJsonObj } from '@/utils/validate'
 import * as routeApi from '@/api/gateway/routes'
 import * as pluginApi from '@/api/gateway/plugins'
+
+const defaultFormData = {
+  old_prefix: '',
+  protocol: 'http',
+  remark: '',
+  prefix: '',
+  service_name: '',
+  status: 1,
+  plugins: [],
+  props: {},
+  propsData: {},
+  enable: true
+}
 
 export default {
   components: { JsonEditor },
@@ -150,23 +143,24 @@ export default {
     }
   },
   data() {
+    const validatePropsData = (rule, value, callback) => {
+      if (value) {
+        if (isJsonObj(value)) {
+          callback()
+        } else {
+          callback(new Error('请检查参数格式，必须是 json object'))
+        }
+      } else {
+        callback()
+      }
+    }
+
     return {
       list: null,
       listLoading: true,
-      listQuery: {
-        uri: undefined,
-        service: undefined
-      },
-      dataFormModel: {
-        remark: '',
-        prefix: '',
-        service_name: '',
-        status: 1,
-        plugins: [],
-        propsData: {
-          aa: 123
-        }
-      },
+      dataFormModel: Object.assign({}, defaultFormData),
+      propsData: {},
+      enable: true,
       dialogFormVisible: false,
       dialogStatus: '',
       textMap: {
@@ -174,20 +168,16 @@ export default {
         create: '添加路由'
       },
       dialogPvVisible: false,
-      plugins: [
-        {
-          value: 'discovery',
-          label: '服务发现'
-        },
-        {
-          value: 'rewwrite',
-          label: 'url重写插件'
-        },
-        {
-          value: 'tracing',
-          label: '链路跟踪插件'
-        }
-      ]
+      plugins: [],
+      dataFormRules: {
+        prefix: [
+          { required: true, message: '请输入路由前缀', trigger: 'blur' }
+        ],
+        service_name: [
+          { required: true, message: '请输入服务名', trigger: 'blur' }
+        ],
+        propsData: [{ validator: validatePropsData, trigger: 'blur' }]
+      }
     }
   },
   created() {
@@ -216,40 +206,87 @@ export default {
         this.listLoading = false
       })
     },
-    handleFilter() {
-      this.listQuery = {}
-      this.getList()
-    },
     resetFormModel() {
-      this.dataFormModel = {
-        remark: 'default',
-        prefix: '/openapi/user',
-        service_name: '',
-        status: 1,
-        plugins: [],
-        propsData: {
-          aa: 123
-        }
-      }
+      this.dataFormModel = Object.assign({}, defaultFormData)
     },
     handleCreate() {
       this.resetFormModel()
       this.dialogStatus = 'create'
       this.dialogFormVisible = true
       this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
+        this.$refs.dataForm.clearValidate()
       })
     },
     handleUpdate(row) {
-      this.dataFormModel = Object.assign({}, row) // copy obj
+      this.dataFormModel = Object.assign({}, row)
+      this.dataFormModel.enable = row.status === 1
+      this.dataFormModel.propsData = row.props
+      this.dataFormModel.old_prefix = row.prefix
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
       this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
+        this.$refs.dataForm.clearValidate()
       })
     },
     submitDataForm() {
-      console.log(this.dataFormModel)
+      this.$refs.dataForm.validate(valid => {
+        if (valid) {
+          const data = {
+            old_prefix: this.dataFormModel.old_prefix,
+            route: {
+              protocol: this.dataFormModel.protocol,
+              remark: this.dataFormModel.remark,
+              prefix: this.dataFormModel.prefix,
+              service_name: this.dataFormModel.service_name,
+              status: this.dataFormModel.enable ? 1 : 0,
+              plugins: this.dataFormModel.plugins,
+              props: JSON.parse(this.dataFormModel.propsData)
+            }
+          }
+          routeApi.apply(data).then(() => {
+            this.dialogFormVisible = false
+            this.getList()
+            this.$notify({
+              title: '完成',
+              message: '提交成功',
+              type: 'success',
+              duration: 2000
+            })
+          })
+        }
+      })
+    },
+    handleDelete(row) {
+      const html = `<span>确定删除路由配置?</span>
+                    <p>
+                    <span>如确删除请输入<strong>[${row.prefix}]</strong></span>`
+      this.$prompt(html, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        dangerouslyUseHTMLString: true,
+        type: 'warning',
+        beforeClose: (action, instance, done) => {
+          if (action !== 'confirm') {
+            done()
+            return
+          }
+          if (row.prefix === instance.inputValue) {
+            done()
+          } else {
+            this.$message.error('输入内容不匹配')
+          }
+        }
+      }).then(() => {
+        routeApi.remove({ prefix: row.prefix }).then(() => {
+          this.getList()
+          this.$notify({
+            title: '完成',
+            message: '删除成功',
+            type: 'success',
+            duration: 2000
+          })
+        })
+      })
     }
   }
 }
@@ -260,7 +297,7 @@ export default {
   text-align: center;
 }
 
-.editor-container{
+.editor-container {
   position: relative;
   height: 50%;
 }

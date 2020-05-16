@@ -8,10 +8,18 @@ export function getList(params) {
   })
 }
 
-export function apply(params) {
+export function apply(data) {
   return request({
     url: '/admin/routes/apply',
     method: 'post',
-    params
+    data
+  })
+}
+
+export function remove(data) {
+  return request({
+    url: '/admin/routes/remove',
+    method: 'post',
+    data
   })
 }
