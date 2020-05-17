@@ -4,7 +4,7 @@
       <el-button
         class="filter-item"
         style="margin-left: 10px"
-        type="primary"
+        type="success"
         icon="el-icon-plus"
         size="small"
         @click="handleCreate"
@@ -13,6 +13,7 @@
 
     <el-table
       v-loading="listLoading"
+      :span-method="objectSpanMethod"
       :data="list"
       element-loading-text="Loading"
       border
@@ -24,12 +25,24 @@
           <span>{{ scope.row.service_name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="节点数" align="left">
+      <el-table-column label="upstream" align="left">
         <template slot-scope="scope">
-          <span>{{ scope.row.nodes.length }}</span>
+          <span>{{ scope.row.upstream }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="更新时间" align="left">
+      <el-table-column label="权重" width="50" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.weight }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column class-name="status-col" label="状态" width="100" align="center">
+        <template slot-scope="scope">
+          <el-tag
+            :type="scope.row.status | statusFilter"
+          >{{ scope.row.status | dict('serviceStatus') }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="更新时间" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.time | parseTime }}</span>
         </template>
@@ -47,7 +60,6 @@
       </el-table-column>
     </el-table>
 
-    <!-- Add dialog -->
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form
         ref="dataForm"
@@ -58,40 +70,17 @@
         size="mini"
         style="width: 400px margin-left:50px"
       >
-        <el-form-item label="协议" prop="protocol">
-          <el-input v-model="dataFormModel.protocol" placeholder="eg: http" readonly />
-        </el-form-item>
-        <el-form-item label="路由前缀" prop="prefix">
-          <el-input v-model="dataFormModel.prefix" placeholder="eg: /openapi/user" />
-        </el-form-item>
         <el-form-item label="服务名" prop="service_name">
-          <el-input v-model="dataFormModel.service_name" placeholder="eg: user" />
+          <el-input v-model="dataFormModel.service_name" placeholder="" />
         </el-form-item>
-        <el-form-item label="是否启用" prop="enable">
+        <el-form-item label="upstream" prop="upstream">
+          <el-input v-model="dataFormModel.upstream" placeholder="" />
+        </el-form-item>
+        <el-form-item label="权重" prop="weight">
+          <el-input-number v-model="dataFormModel.weight" :min="1" :max="100" />
+        </el-form-item>
+        <el-form-item label="是否上线" prop="enable">
           <el-switch v-model="dataFormModel.status" :active-value="1" :inactive-value="0" />
-        </el-form-item>
-        <el-form-item label="plugins" prop="plugins">
-          <el-select v-model="dataFormModel.plugins" multiple placeholder="请选择">
-            <el-option
-              v-for="item in plugins"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="参数" prop="propsData">
-          <div class="editor-container">
-            <json-editor ref="jsonEditor" v-model="dataFormModel.propsData" />
-          </div>
-        </el-form-item>
-        <el-form-item label="说明" prop="remark">
-          <el-input
-            v-model="dataFormModel.remark"
-            :autosize="{ minRows: 2, maxRows: 4}"
-            type="textarea"
-            placeholder="备注、说明"
-          />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -103,25 +92,17 @@
 </template>
 
 <script>
-import JsonEditor from '@/components/JsonEditor'
-import dict from '@/utils/dict'
 import { isJsonObj } from '@/utils/validate'
 import * as serviceApi from '@/api/gateway/services'
 
 const defaultFormData = {
-  old_prefix: '',
-  protocol: 'http',
-  remark: '',
-  prefix: '',
   service_name: '',
-  status: 1,
-  plugins: [],
-  props: {},
-  propsData: '{}'
+  upstrean: [],
+  weight: 1,
+  status: 1
 }
 
 export default {
-  components: { JsonEditor },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -129,27 +110,12 @@ export default {
         0: 'danger'
       }
       return statusMap[status]
-    },
-    statusLabelFilter(status) {
-      return dict.getLabel('status', status)
     }
   },
   data() {
-    const validatePropsData = (rule, value, callback) => {
-      const propsData = this.dataFormModel.propsData
-      if (propsData) {
-        if (isJsonObj(propsData)) {
-          callback()
-        } else {
-          console.log('not json string: ', propsData)
-          callback(new Error('请检查参数格式，必须是 json object'))
-        }
-      } else {
-        callback()
-      }
-    }
-
     return {
+      spanCol: [],
+      pos: 0,
       list: null,
       listLoading: true,
       dataFormModel: Object.assign({}, defaultFormData),
@@ -157,46 +123,58 @@ export default {
       dialogFormVisible: false,
       dialogStatus: '',
       textMap: {
-        update: '修改路由',
-        create: '添加路由'
+        update: '修改服务节点',
+        create: '添加服务节点'
       },
       dialogPvVisible: false,
       plugins: [],
       dataFormRules: {
-        prefix: [
-          { required: true, message: '请输入路由前缀', trigger: 'blur' }
+        upstream: [
+          { required: true, message: '请输入upstrean', trigger: 'blur' }
         ],
         service_name: [
           { required: true, message: '请输入服务名', trigger: 'blur' }
-        ],
-        propsData: [{ validator: validatePropsData, trigger: 'blur' }]
+        ]
       }
     }
   },
   created() {
     this.getList()
-    this.getPlugins()
   },
   methods: {
-    getPlugins() {
-      pluginApi.getList().then(response => {
-        var plugins = []
-        if (response.data && response.data.length > 0) {
-          response.data.forEach(data => {
-            plugins.push({
-              value: data.name,
-              label: data.desc
-            })
-          })
+    getSpanCol(list) {
+      for (var i = 0; i < list.length; i++) {
+        if (i === 0) {
+          this.spanCol.push(1)
+          this.pos = 0
+        } else {
+          // 判断当前元素与上一个元素是否相同
+          if (list[i].service_name === list[i - 1].service_name) {
+            this.spanCol[this.pos] += 1
+            this.spanCol.push(0)
+          } else {
+            this.spanCol.push(1)
+            this.pos = i
+          }
         }
-        this.plugins = plugins
-      })
+      }
+    },
+    objectSpanMethod({ row, column, rowIndex, columnIndex }) {
+      if (columnIndex === 0) {
+        const _row = this.spanCol[rowIndex]
+        const _col = _row > 0 ? 1 : 0
+        return {
+          rowspan: _row,
+          colspan: _col
+        }
+      }
     },
     getList() {
       this.listLoading = true
       serviceApi.getList().then(response => {
         this.list = response.data
         this.listLoading = false
+        this.getSpanCol(this.list)
       })
     },
     resetFormModel() {
@@ -223,19 +201,7 @@ export default {
     submitDataForm() {
       this.$refs.dataForm.validate(valid => {
         if (valid) {
-          const data = {
-            old_prefix: this.dataFormModel.old_prefix,
-            route: {
-              protocol: this.dataFormModel.protocol,
-              remark: this.dataFormModel.remark,
-              prefix: this.dataFormModel.prefix,
-              service_name: this.dataFormModel.service_name,
-              status: this.dataFormModel.status,
-              plugins: this.dataFormModel.plugins,
-              props: JSON.parse(this.dataFormModel.propsData)
-            }
-          }
-          serviceApi.updateStatus(data).then(() => {
+          serviceApi.updateStatus(this.dataFormModel).then(() => {
             this.dialogFormVisible = false
             this.getList()
             this.$notify({
@@ -249,9 +215,9 @@ export default {
       })
     },
     handleDelete(row) {
-      const html = `<span>确定删除路由配置?</span>
+      const html = `<span>确定删除服务节点?</span>
                     <p>
-                    <span>如确删除请输入<strong>[${row.prefix}]</strong></span>`
+                    <span>如确删除请输入<strong>[${row.upstream}]</strong></span>`
       this.$prompt(html, '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -262,14 +228,17 @@ export default {
             done()
             return
           }
-          if (row.prefix === instance.inputValue) {
+          if (row.upstream === instance.inputValue) {
             done()
           } else {
             this.$message.error('输入内容不匹配')
           }
         }
       }).then(() => {
-        serviceApi.remove({ prefix: row.prefix }).then(() => {
+        serviceApi.remove({
+          service_name: row.service_name,
+          upstream: row.upstream
+        }).then(() => {
           this.getList()
           this.$notify({
             title: '完成',

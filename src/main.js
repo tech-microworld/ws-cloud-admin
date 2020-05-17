@@ -15,6 +15,7 @@ import router from './router'
 import '@/icons' // icon
 import '@/permission' // permission control
 
+import dict from '@/utils/dict'
 import { parseTime, formatTime } from '@/utils'
 
 /**
@@ -33,6 +34,7 @@ if (process.env.NODE_ENV === 'production') {
 // global filters
 Vue.filter('parseTime', parseTime)
 Vue.filter('formatTime', formatTime)
+Vue.filter('dict', dict)
 
 // set ElementUI lang to EN
 Vue.use(ElementUI, { locale })

@@ -4,7 +4,7 @@
       <el-button
         class="filter-item"
         style="margin-left: 10px"
-        type="primary"
+        type="success"
         icon="el-icon-plus"
         size="small"
         @click="handleCreate"
@@ -37,7 +37,9 @@
       </el-table-column>
       <el-table-column class-name="status-col" label="是否启用" width="110" align="center">
         <template slot-scope="scope">
-          <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status | statusLabelFilter }}</el-tag>
+          <el-tag
+            :type="scope.row.status | statusFilter"
+          >{{ scope.row.status | dict('routeStatus') }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="更新时间" align="left">
@@ -45,15 +47,10 @@
           <span>{{ scope.row.time | parseTime }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">修改</el-button>
-          <el-button
-            v-if="row.status!='deleted'"
-            size="mini"
-            type="danger"
-            @click="handleDelete(row)"
-          >删除</el-button>
+          <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -115,7 +112,6 @@
 
 <script>
 import JsonEditor from '@/components/JsonEditor'
-import dict from '@/utils/dict'
 import { isJsonObj } from '@/utils/validate'
 import * as routeApi from '@/api/gateway/routes'
 import * as pluginApi from '@/api/gateway/plugins'
@@ -135,18 +131,15 @@ const defaultFormData = {
 export default {
   components: { JsonEditor },
   filters: {
-    statusFilter(status) {
+    statusFilter (status) {
       const statusMap = {
         1: 'success',
         0: 'danger'
       }
       return statusMap[status]
-    },
-    statusLabelFilter(status) {
-      return dict.getLabel('status', status)
     }
   },
-  data() {
+  data () {
     const validatePropsData = (rule, value, callback) => {
       const propsData = this.dataFormModel.propsData
       if (propsData) {
@@ -185,12 +178,12 @@ export default {
       }
     }
   },
-  created() {
+  created () {
     this.getList()
     this.getPlugins()
   },
   methods: {
-    getPlugins() {
+    getPlugins () {
       pluginApi.getList().then(response => {
         var plugins = []
         if (response.data && response.data.length > 0) {
@@ -204,17 +197,17 @@ export default {
         this.plugins = plugins
       })
     },
-    getList() {
+    getList () {
       this.listLoading = true
       routeApi.getList().then(response => {
         this.list = response.data
         this.listLoading = false
       })
     },
-    resetFormModel() {
+    resetFormModel () {
       this.dataFormModel = Object.assign({}, defaultFormData)
     },
-    handleCreate() {
+    handleCreate () {
       this.resetFormModel()
       this.dialogStatus = 'create'
       this.dialogFormVisible = true
@@ -222,7 +215,7 @@ export default {
         this.$refs.dataForm.clearValidate()
       })
     },
-    handleUpdate(row) {
+    handleUpdate (row) {
       this.dataFormModel = Object.assign({}, row)
       this.dataFormModel.propsData = JSON.stringify(row.props, null, 2)
       this.dataFormModel.old_prefix = row.prefix
@@ -232,7 +225,7 @@ export default {
         this.$refs.dataForm.clearValidate()
       })
     },
-    submitDataForm() {
+    submitDataForm () {
       this.$refs.dataForm.validate(valid => {
         if (valid) {
           const data = {
@@ -260,7 +253,7 @@ export default {
         }
       })
     },
-    handleDelete(row) {
+    handleDelete (row) {
       const html = `<span>确定删除路由配置?</span>
                     <p>
                     <span>如确删除请输入<strong>[${row.prefix}]</strong></span>`

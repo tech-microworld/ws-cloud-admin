@@ -1,12 +1,14 @@
 const dict = {
-  status: {
+  routeStatus: {
     1: '启用',
     0: '禁用'
+  },
+  serviceStatus: {
+    1: '上线',
+    0: '下线'
   }
 }
 
-export default {
-  getLabel: function(group, value) {
-    return dict[group][value]
-  }
+export default function(value, group) {
+  return dict[group][value]
 }
