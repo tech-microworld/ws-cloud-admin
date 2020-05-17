@@ -92,7 +92,6 @@
 </template>
 
 <script>
-import { isJsonObj } from '@/utils/validate'
 import * as serviceApi from '@/api/gateway/services'
 
 const defaultFormData = {
@@ -254,12 +253,4 @@ export default {
 </script>
 
 <style scoped>
-.line {
-  text-align: center;
-}
-
-.editor-container {
-  position: relative;
-  height: 50%;
-}
 </style>
