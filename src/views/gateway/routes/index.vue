@@ -131,7 +131,7 @@ const defaultFormData = {
 export default {
   components: { JsonEditor },
   filters: {
-    statusFilter (status) {
+    statusFilter(status) {
       const statusMap = {
         1: 'success',
         0: 'danger'
@@ -139,7 +139,7 @@ export default {
       return statusMap[status]
     }
   },
-  data () {
+  data() {
     const validatePropsData = (rule, value, callback) => {
       const propsData = this.dataFormModel.propsData
       if (propsData) {
@@ -178,12 +178,12 @@ export default {
       }
     }
   },
-  created () {
+  created() {
     this.getList()
     this.getPlugins()
   },
   methods: {
-    getPlugins () {
+    getPlugins() {
       pluginApi.getList().then(response => {
         var plugins = []
         if (response.data && response.data.length > 0) {
@@ -197,17 +197,17 @@ export default {
         this.plugins = plugins
       })
     },
-    getList () {
+    getList() {
       this.listLoading = true
       routeApi.getList().then(response => {
         this.list = response.data
         this.listLoading = false
       })
     },
-    resetFormModel () {
+    resetFormModel() {
       this.dataFormModel = Object.assign({}, defaultFormData)
     },
-    handleCreate () {
+    handleCreate() {
       this.resetFormModel()
       this.dialogStatus = 'create'
       this.dialogFormVisible = true
@@ -215,7 +215,7 @@ export default {
         this.$refs.dataForm.clearValidate()
       })
     },
-    handleUpdate (row) {
+    handleUpdate(row) {
       this.dataFormModel = Object.assign({}, row)
       this.dataFormModel.propsData = JSON.stringify(row.props, null, 2)
       this.dataFormModel.old_prefix = row.prefix
@@ -225,7 +225,7 @@ export default {
         this.$refs.dataForm.clearValidate()
       })
     },
-    submitDataForm () {
+    submitDataForm() {
       this.$refs.dataForm.validate(valid => {
         if (valid) {
           const data = {
@@ -253,7 +253,7 @@ export default {
         }
       })
     },
-    handleDelete (row) {
+    handleDelete(row) {
       const html = `<span>确定删除路由配置?</span>
                     <p>
                     <span>如确删除请输入<strong>[${row.prefix}]</strong></span>`
