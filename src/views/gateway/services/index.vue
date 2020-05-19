@@ -71,15 +71,15 @@
         style="width: 400px margin-left:50px"
       >
         <el-form-item label="服务名" prop="service_name">
-          <el-input v-model="dataFormModel.service_name" placeholder="" />
+          <el-input v-model="dataFormModel.service_name" :readonly="dialogStatus == 'update'" />
         </el-form-item>
         <el-form-item label="upstream" prop="upstream">
-          <el-input v-model="dataFormModel.upstream" placeholder="" />
+          <el-input v-model="dataFormModel.upstream" :readonly="dialogStatus == 'update'" />
         </el-form-item>
         <el-form-item label="权重" prop="weight">
           <el-input-number v-model="dataFormModel.weight" :min="1" :max="100" />
         </el-form-item>
-        <el-form-item label="是否上线" prop="enable">
+        <el-form-item label="是否上线" prop="status">
           <el-switch v-model="dataFormModel.status" :active-value="1" :inactive-value="0" />
         </el-form-item>
       </el-form>
@@ -96,7 +96,7 @@ import * as serviceApi from '@/api/gateway/services'
 
 const defaultFormData = {
   service_name: '',
-  upstrean: [],
+  upstream: '',
   weight: 1,
   status: 1
 }
@@ -118,7 +118,6 @@ export default {
       list: null,
       listLoading: true,
       dataFormModel: Object.assign({}, defaultFormData),
-      enable: true,
       dialogFormVisible: false,
       dialogStatus: '',
       textMap: {
@@ -129,7 +128,7 @@ export default {
       plugins: [],
       dataFormRules: {
         upstream: [
-          { required: true, message: '请输入upstrean', trigger: 'blur' }
+          { required: true, message: '请输入upstream', trigger: 'blur' }
         ],
         service_name: [
           { required: true, message: '请输入服务名', trigger: 'blur' }
@@ -142,6 +141,7 @@ export default {
   },
   methods: {
     getSpanCol(list) {
+      this.clearSpan()
       for (var i = 0; i < list.length; i++) {
         if (i === 0) {
           this.spanCol.push(1)
@@ -168,6 +168,10 @@ export default {
         }
       }
     },
+    clearSpan() {
+      this.spanCol = []
+      this.pos = 0
+    },
     getList() {
       this.listLoading = true
       serviceApi.getList().then(response => {
@@ -189,8 +193,6 @@ export default {
     },
     handleUpdate(row) {
       this.dataFormModel = Object.assign({}, row)
-      this.dataFormModel.propsData = JSON.stringify(row.props, null, 2)
-      this.dataFormModel.old_prefix = row.prefix
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
       this.$nextTick(() => {
@@ -200,7 +202,7 @@ export default {
     submitDataForm() {
       this.$refs.dataForm.validate(valid => {
         if (valid) {
-          serviceApi.updateStatus(this.dataFormModel).then(() => {
+          serviceApi.save(this.dataFormModel).then(() => {
             this.dialogFormVisible = false
             this.getList()
             this.$notify({

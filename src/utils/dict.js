@@ -4,8 +4,8 @@ const dict = {
     0: '禁用'
   },
   serviceStatus: {
-    1: '上线',
-    0: '下线'
+    1: 'up',
+    0: 'down'
   }
 }
 

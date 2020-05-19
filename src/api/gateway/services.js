@@ -19,9 +19,9 @@ export function remove(data) {
 }
 
 // 更新节点状态（上下线）
-export function updateStatus(data) {
+export function save(data) {
   return request({
-    url: '/admin/services/offline',
+    url: '/admin/services/save',
     method: 'post',
     data
   })
