@@ -227,7 +227,17 @@ export default {
     submitDataForm() {
       this.$refs.dataForm.validate(valid => {
         if (valid) {
-          routeApi.save(this.dataFormModel).then(() => {
+          const data = {
+            key: this.dataFormModel.key,
+            protocol: this.dataFormModel.protocol,
+            remark: this.dataFormModel.remark,
+            prefix: this.dataFormModel.prefix,
+            service_name: this.dataFormModel.service_name,
+            status: this.dataFormModel.status,
+            plugins: this.dataFormModel.plugins,
+            props: JSON.parse(this.dataFormModel.propsData)
+          }
+          routeApi.save(data).then(() => {
             this.dialogFormVisible = false
             this.getList()
             this.$notify({
