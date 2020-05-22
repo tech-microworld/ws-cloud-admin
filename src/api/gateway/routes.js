@@ -8,9 +8,9 @@ export function getList(params) {
   })
 }
 
-export function apply(data) {
+export function save(data) {
   return request({
-    url: '/admin/routes/apply',
+    url: '/admin/routes/save',
     method: 'post',
     data
   })

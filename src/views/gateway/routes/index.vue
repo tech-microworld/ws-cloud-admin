@@ -117,7 +117,7 @@ import * as routeApi from '@/api/gateway/routes'
 import * as pluginApi from '@/api/gateway/plugins'
 
 const defaultFormData = {
-  old_prefix: '',
+  key: '',
   protocol: 'http',
   remark: '',
   prefix: '',
@@ -218,7 +218,6 @@ export default {
     handleUpdate(row) {
       this.dataFormModel = Object.assign({}, row)
       this.dataFormModel.propsData = JSON.stringify(row.props, null, 2)
-      this.dataFormModel.old_prefix = row.prefix
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
       this.$nextTick(() => {
@@ -228,19 +227,7 @@ export default {
     submitDataForm() {
       this.$refs.dataForm.validate(valid => {
         if (valid) {
-          const data = {
-            old_prefix: this.dataFormModel.old_prefix,
-            route: {
-              protocol: this.dataFormModel.protocol,
-              remark: this.dataFormModel.remark,
-              prefix: this.dataFormModel.prefix,
-              service_name: this.dataFormModel.service_name,
-              status: this.dataFormModel.status,
-              plugins: this.dataFormModel.plugins,
-              props: JSON.parse(this.dataFormModel.propsData)
-            }
-          }
-          routeApi.apply(data).then(() => {
+          routeApi.save(this.dataFormModel).then(() => {
             this.dialogFormVisible = false
             this.getList()
             this.$notify({
