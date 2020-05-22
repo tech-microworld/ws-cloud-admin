@@ -95,6 +95,7 @@
 import * as serviceApi from '@/api/gateway/services'
 
 const defaultFormData = {
+  key: '',
   service_name: '',
   upstream: '',
   weight: 1,
@@ -237,8 +238,7 @@ export default {
         }
       }).then(() => {
         serviceApi.remove({
-          service_name: row.service_name,
-          upstream: row.upstream
+          key: row.key
         }).then(() => {
           this.getList()
           this.$notify({
