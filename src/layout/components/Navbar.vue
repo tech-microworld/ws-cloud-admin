@@ -16,10 +16,10 @@
               首页
             </el-dropdown-item>
           </router-link>
-          <a target="_blank" href="https://github.com/tech-microworld/my-cloud-gateway">
+          <a target="_blank" href="https://github.com/tech-microworld/ws-cloud-gateway">
             <el-dropdown-item>Github</el-dropdown-item>
           </a>
-          <a target="_blank" href="https://tech-microworld.github.io/my-cloud/gateway/">
+          <a target="_blank" href="https://tech-microworld.github.io/ws-cloud/gateway/">
             <el-dropdown-item>文档</el-dropdown-item>
           </a>
           <el-dropdown-item divided @click.native="logout">

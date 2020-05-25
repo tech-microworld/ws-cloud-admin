@@ -1,10 +1,10 @@
-# my-cloud-admin
+# ws-cloud-admin
 
 My Cloud 管理后台
 
-github: <https://github.com/tech-microworld/my-cloud-admin>
+github: <https://github.com/tech-microworld/ws-cloud-admin>
 
-my-cloud-gateway: <https://github.com/tech-microworld/my-cloud-gateway>
+ws-cloud-gateway: <https://github.com/tech-microworld/ws-cloud-gateway>
 
 ## Build Setup
 
