@@ -67,7 +67,7 @@
         style="width: 400px margin-left:50px"
       >
         <el-form-item label="协议" prop="protocol">
-          <el-input v-model="dataFormModel.protocol" placeholder="eg: http" readonly />
+          <el-input v-model="dataFormModel.protocol" placeholder="eg: http" />
         </el-form-item>
         <el-form-item label="路由前缀" prop="prefix">
           <el-input v-model="dataFormModel.prefix" placeholder="eg: /openapi/user" />
@@ -169,6 +169,9 @@ export default {
       plugins: [],
       dataFormRules: {
         prefix: [
+          { required: true, message: '请输入路由前缀', trigger: 'blur' }
+        ],
+        protocol: [
           { required: true, message: '请输入路由前缀', trigger: 'blur' }
         ],
         service_name: [
