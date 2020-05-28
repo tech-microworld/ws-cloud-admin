@@ -67,7 +67,14 @@
         style="width: 400px margin-left:50px"
       >
         <el-form-item label="协议" prop="protocol">
-          <el-input v-model="dataFormModel.protocol" placeholder="eg: http" readonly />
+          <el-select v-model="dataFormModel.protocol" placeholder="选择协议">
+            <el-option
+              v-for="item in protocolOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="路由前缀" prop="prefix">
           <el-input v-model="dataFormModel.prefix" placeholder="eg: /openapi/user" />
@@ -171,11 +178,24 @@ export default {
         prefix: [
           { required: true, message: '请输入路由前缀', trigger: 'blur' }
         ],
+        protocol: [
+          { required: true, message: '请输入路由前缀', trigger: 'blur' }
+        ],
         service_name: [
           { required: true, message: '请输入服务名', trigger: 'blur' }
         ],
         propsData: [{ validator: validatePropsData, trigger: 'blur' }]
-      }
+      },
+      protocolOptions: [
+        {
+          value: 'http',
+          label: 'http'
+        },
+        {
+          value: 'grpc',
+          label: 'grpc'
+        }
+      ]
     }
   },
   created() {
