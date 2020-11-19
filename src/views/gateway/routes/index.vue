@@ -291,7 +291,7 @@ export default {
           }
         }
       }).then(() => {
-        routeApi.remove({ prefix: row.prefix }).then(() => {
+        routeApi.remove({ key: row.key }).then(() => {
           this.getList()
           this.$notify({
             title: '完成',
