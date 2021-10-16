@@ -35,11 +35,16 @@
           <span>{{ scope.row.weight }}</span>
         </template>
       </el-table-column>
-      <el-table-column class-name="status-col" label="状态" width="100" align="center">
+      <el-table-column
+        class-name="status-col"
+        label="状态"
+        width="100"
+        align="center"
+      >
         <template slot-scope="scope">
-          <el-tag
-            :type="scope.row.status | statusFilter"
-          >{{ scope.row.status | dict('serviceStatus') }}</el-tag>
+          <el-tag :type="scope.row.status | statusFilter">{{
+            scope.row.status | dict('serviceStatus')
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="更新时间" align="center">
@@ -47,11 +52,20 @@
           <span>{{ scope.row.time | parseTime }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
-        <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">修改</el-button>
+      <el-table-column
+        label="操作"
+        align="center"
+        width="230"
+        class-name="small-padding fixed-width"
+      >
+        <template slot-scope="{ row }">
           <el-button
-            v-if="row.status!='deleted'"
+            type="primary"
+            size="mini"
+            @click="handleUpdate(row)"
+          >修改</el-button>
+          <el-button
+            v-if="row.status != 'deleted'"
             size="mini"
             type="danger"
             @click="handleDelete(row)"
@@ -71,16 +85,23 @@
         style="width: 400px margin-left:50px"
       >
         <el-form-item label="服务名" prop="service_name">
-          <el-input v-model="dataFormModel.service_name" :readonly="dialogStatus == 'update'" />
+          <el-input
+            v-model="dataFormModel.service_name"
+            :readonly="dialogStatus == 'update'"
+          />
         </el-form-item>
         <el-form-item label="upstream" prop="upstream">
-          <el-input v-model="dataFormModel.upstream" :readonly="dialogStatus == 'update'" />
+          <el-input v-model="dataFormModel.upstream" />
         </el-form-item>
         <el-form-item label="权重" prop="weight">
           <el-input-number v-model="dataFormModel.weight" :min="1" :max="100" />
         </el-form-item>
         <el-form-item label="是否上线" prop="status">
-          <el-switch v-model="dataFormModel.status" :active-value="1" :inactive-value="0" />
+          <el-switch
+            v-model="dataFormModel.status"
+            :active-value="1"
+            :inactive-value="0"
+          />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -219,7 +240,9 @@ export default {
     handleDelete(row) {
       const html = `<span>确定删除服务节点?</span>
                     <p>
-                    <span>如确删除请输入<strong>[${row.upstream}]</strong></span>`
+                    <span>如确删除请输入<strong>[${
+  row.upstream
+}]</strong></span>`
       this.$prompt(html, '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -237,22 +260,23 @@ export default {
           }
         }
       }).then(() => {
-        serviceApi.remove({
-          key: row.key
-        }).then(() => {
-          this.getList()
-          this.$notify({
-            title: '完成',
-            message: '删除成功',
-            type: 'success',
-            duration: 2000
+        serviceApi
+          .remove({
+            key: row.key
           })
-        })
+          .then(() => {
+            this.getList()
+            this.$notify({
+              title: '完成',
+              message: '删除成功',
+              type: 'success',
+              duration: 2000
+            })
+          })
       })
     }
   }
 }
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
