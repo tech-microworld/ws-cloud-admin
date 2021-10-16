@@ -1,6 +1,6 @@
 # ws-cloud-admin
 
-My Cloud 管理后台
+ws-cloud-admin 管理后台
 
 github: <https://github.com/tech-microworld/ws-cloud-admin>
 
@@ -10,10 +10,10 @@ ws-cloud-gateway: <https://github.com/tech-microworld/ws-cloud-gateway>
 
 ```bash
 # clone the project
-git clone https://github.com/PanJiaChen/vue-admin-template.git
+git clone https://github.com/tech-microworld/ws-cloud-admin
 
 # enter the project directory
-cd vue-admin-template
+cd ws-cloud-admin
 
 # install dependency
 npm install
@@ -22,7 +22,7 @@ npm install
 npm run dev
 ```
 
-This will automatically open http://localhost:9528
+This will automatically open http://localhost:10001
 
 ## Build
 
