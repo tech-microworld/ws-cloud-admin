@@ -22,6 +22,11 @@
       <el-table-column label="协议" width="110" align="center">
         <template slot-scope="scope">{{ scope.row.protocol }}</template>
       </el-table-column>
+      <el-table-column label="Hosts" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.hosts | hostFilter }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="路由前缀">
         <template slot-scope="scope">{{ scope.row.prefix }}</template>
       </el-table-column>
@@ -35,11 +40,16 @@
           <span>{{ scope.row.remark }}</span>
         </template>
       </el-table-column>
-      <el-table-column class-name="status-col" label="是否启用" width="110" align="center">
+      <el-table-column
+        class-name="status-col"
+        label="是否启用"
+        width="110"
+        align="center"
+      >
         <template slot-scope="scope">
-          <el-tag
-            :type="scope.row.status | statusFilter"
-          >{{ scope.row.status | dict('routeStatus') }}</el-tag>
+          <el-tag :type="scope.row.status | statusFilter">{{
+            scope.row.status | dict('routeStatus')
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="更新时间" align="left">
@@ -47,10 +57,22 @@
           <span>{{ scope.row.time | parseTime }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">修改</el-button>
-          <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
+      <el-table-column
+        label="操作"
+        align="center"
+        class-name="small-padding fixed-width"
+      >
+        <template slot-scope="{ row }">
+          <el-button
+            type="primary"
+            size="mini"
+            @click="handleUpdate(row)"
+          >修改</el-button>
+          <el-button
+            type="danger"
+            size="mini"
+            @click="handleDelete(row)"
+          >删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -76,17 +98,37 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="Hosts" prop="hosts">
+          <el-input
+            v-model="dataFormModel.hosts"
+            placeholder="非必填，多个使用,分隔 eg: example.com,example.cn"
+          />
+        </el-form-item>
         <el-form-item label="路由前缀" prop="prefix">
-          <el-input v-model="dataFormModel.prefix" placeholder="eg: /openapi/user" />
+          <el-input
+            v-model="dataFormModel.prefix"
+            placeholder="eg: /openapi/user"
+          />
         </el-form-item>
         <el-form-item label="服务名" prop="service_name">
-          <el-input v-model="dataFormModel.service_name" placeholder="eg: user" />
+          <el-input
+            v-model="dataFormModel.service_name"
+            placeholder="eg: user"
+          />
         </el-form-item>
         <el-form-item label="是否启用" prop="enable">
-          <el-switch v-model="dataFormModel.status" :active-value="1" :inactive-value="0" />
+          <el-switch
+            v-model="dataFormModel.status"
+            :active-value="1"
+            :inactive-value="0"
+          />
         </el-form-item>
         <el-form-item label="plugins" prop="plugins">
-          <el-select v-model="dataFormModel.plugins" multiple placeholder="请选择">
+          <el-select
+            v-model="dataFormModel.plugins"
+            multiple
+            placeholder="请选择"
+          >
             <el-option
               v-for="item in plugins"
               :key="item.value"
@@ -103,7 +145,7 @@
         <el-form-item label="说明" prop="remark">
           <el-input
             v-model="dataFormModel.remark"
-            :autosize="{ minRows: 2, maxRows: 4}"
+            :autosize="{ minRows: 2, maxRows: 4 }"
             type="textarea"
             placeholder="备注、说明"
           />
@@ -127,6 +169,7 @@ const defaultFormData = {
   key: '',
   protocol: 'http',
   remark: '',
+  hosts: '',
   prefix: '',
   service_name: '',
   status: 1,
@@ -144,6 +187,12 @@ export default {
         0: 'danger'
       }
       return statusMap[status]
+    },
+    hostFilter(hosts) {
+      if (!Array.isArray(hosts)) {
+        return ''
+      }
+      return hosts.join(',')
     }
   },
   data() {
@@ -237,7 +286,11 @@ export default {
     },
     handleUpdate(row) {
       this.dataFormModel = Object.assign({}, row)
+      console.info('dataFormModel ', this.dataFormModel)
       this.dataFormModel.propsData = JSON.stringify(row.props, null, 2)
+      this.dataFormModel.hosts = Array.isArray(row.hosts)
+        ? row.hosts.join(',')
+        : ''
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
       this.$nextTick(() => {
@@ -247,10 +300,14 @@ export default {
     submitDataForm() {
       this.$refs.dataForm.validate(valid => {
         if (valid) {
+          let hosts = this.dataFormModel.hosts || ''
+          hosts = hosts.trim()
           const data = {
             key: this.dataFormModel.key,
             protocol: this.dataFormModel.protocol,
             remark: this.dataFormModel.remark,
+            hosts:
+              hosts.length > 0 ? hosts.split(',').map(item => item.trim()) : [],
             prefix: this.dataFormModel.prefix,
             service_name: this.dataFormModel.service_name,
             status: this.dataFormModel.status,
@@ -266,6 +323,7 @@ export default {
               type: 'success',
               duration: 2000
             })
+            this.getList()
           })
         }
       })
@@ -299,6 +357,7 @@ export default {
             type: 'success',
             duration: 2000
           })
+          this.getList()
         })
       })
     }
