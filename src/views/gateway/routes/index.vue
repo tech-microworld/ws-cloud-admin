@@ -274,6 +274,7 @@ export default {
         const data = response.data
         // lua 无法区分数组还是对象，这里返回 {} 就表示没有数据
         if (isEmptyObj(data)) {
+          this.list = []
           return
         }
         this.list = data.map(item => {
