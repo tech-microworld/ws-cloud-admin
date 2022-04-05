@@ -162,6 +162,7 @@
 <script>
 import JsonEditor from '@/components/JsonEditor'
 import { isJsonObj } from '@/utils/validate'
+import { isEmptyObj } from '@/utils'
 import * as routeApi from '@/api/gateway/routes'
 import * as pluginApi from '@/api/gateway/plugins'
 
@@ -269,7 +270,17 @@ export default {
     getList() {
       this.listLoading = true
       routeApi.getList().then(response => {
-        this.list = response.data
+        const data = response.data
+        // lua 无法区分数组还是对象，这里返回 {} 就表示没有数据
+        if (isEmptyObj(data)) {
+          return
+        }
+        this.list = data.map(item => {
+          if (isEmptyObj(item.plugins)) {
+            item.plugins = []
+          }
+          return item
+        })
         this.listLoading = false
       })
     },
@@ -286,7 +297,6 @@ export default {
     },
     handleUpdate(row) {
       this.dataFormModel = Object.assign({}, row)
-      console.info('dataFormModel ', this.dataFormModel)
       this.dataFormModel.propsData = JSON.stringify(row.props, null, 2)
       this.dataFormModel.hosts = Array.isArray(row.hosts)
         ? row.hosts.join(',')
@@ -323,7 +333,6 @@ export default {
               type: 'success',
               duration: 2000
             })
-            this.getList()
           })
         }
       })
@@ -357,7 +366,6 @@ export default {
             type: 'success',
             duration: 2000
           })
-          this.getList()
         })
       })
     }
