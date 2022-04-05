@@ -270,6 +270,7 @@ export default {
     getList() {
       this.listLoading = true
       routeApi.getList().then(response => {
+        this.listLoading = false
         const data = response.data
         // lua 无法区分数组还是对象，这里返回 {} 就表示没有数据
         if (isEmptyObj(data)) {
@@ -281,7 +282,6 @@ export default {
           }
           return item
         })
-        this.listLoading = false
       })
     },
     resetFormModel() {
